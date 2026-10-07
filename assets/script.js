@@ -1,5 +1,14 @@
 (() => {
   const WHATSAPP = "9647737999944";
+
+  /* ---------- Gallery content ----------
+     The "من أعمالنا" section stays hidden until at least one item is added.
+     INSTAGRAM_POSTS: post links copied from the clinic's Instagram (Share → Copy link),
+       e.g. "https://www.instagram.com/p/XXXXXXXX/". Shown with Instagram's official embed.
+     GALLERY_IMAGES: photos supplied by the clinic, placed in assets/gallery/,
+       e.g. { src: "assets/gallery/case-1.jpg", alt: "ابتسامة هوليود – زركون" }. */
+  const INSTAGRAM_POSTS = [];
+  const GALLERY_IMAGES = [];
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 
@@ -157,6 +166,52 @@
     const update = () => ba.style.setProperty("--pos", `${range.value}%`);
     range.addEventListener("input", update);
     update();
+  }
+
+  /* ---------- Gallery ---------- */
+  const gallery = $("#gallery");
+  const grid = $("#galleryGrid");
+  const posts = INSTAGRAM_POSTS
+    .map((u) => String(u).trim().match(/^https:\/\/(?:www\.)?instagram\.com\/(p|reel)\/([\w-]+)/))
+    .filter(Boolean)
+    .map(([, kind, code]) => `https://www.instagram.com/${kind}/${code}/`);
+
+  if (posts.length || GALLERY_IMAGES.length) {
+    GALLERY_IMAGES.forEach(({ src, alt = "" }) => {
+      const fig = document.createElement("figure");
+      fig.className = "gallery__item";
+      const img = document.createElement("img");
+      img.src = src;
+      img.alt = alt;
+      img.loading = "lazy";
+      fig.append(img);
+      if (alt) {
+        const cap = document.createElement("figcaption");
+        cap.textContent = alt;
+        fig.append(cap);
+      }
+      grid.append(fig);
+    });
+    posts.forEach((url) => {
+      const q = document.createElement("blockquote");
+      q.className = "instagram-media";
+      q.dataset.instgrmPermalink = url;
+      q.dataset.instgrmVersion = "14";
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.textContent = "عرض المنشور على إنستغرام";
+      q.append(a);
+      grid.append(q);
+    });
+    gallery.hidden = false;
+    if (posts.length) {
+      const s = document.createElement("script");
+      s.src = "https://www.instagram.com/embed.js";
+      s.async = true;
+      document.body.append(s);
+    }
   }
 
   /* ---------- Booking form → WhatsApp ---------- */
